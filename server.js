@@ -39,7 +39,7 @@ function clearFiles() {
 
 clearFiles();
 
-app.get('/', (_req, res) => {
+app.get('/weather', (_req, res) => {
   if (!fs.existsSync(WEATHER_FILE)) {
     createFile(WEATHER_FILE);
   }
