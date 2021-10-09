@@ -53,12 +53,12 @@ app.get('/', (_req, res) => {
 });
 
 app.get('/raw', (req, res) => {
-  if (req.params.id === undefined) {
+  if (req.query.id === undefined) {
     res.status(400).send('must provide id');
     return;
   }
 
-  const rawFile = RAW_FILE(req.params.id);
+  const rawFile = RAW_FILE(req.query.id);
   if (!fs.existsSync(rawFile)) {
     createFile(rawFile);
   }
