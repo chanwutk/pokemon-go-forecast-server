@@ -110,7 +110,7 @@ app.post('/modify-raw', (req, res) => {
 });
 
 app.post('/clear-records', (req, res) => {
-  const cred = req.body.cred;
+  const cred = req.body.credential;
   if (CREDENTIAL === cred) {
     clearFiles();
     res.status(200).send('records cleared');
