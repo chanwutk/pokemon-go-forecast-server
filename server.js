@@ -29,7 +29,9 @@ function createFile(file) {
 }
 
 function clearFiles() {
-  fs.unlinkSync(WEATHER_FILE);
+  if (fs.existsSync(WEATHER_FILE)) {
+    fs.unlinkSync(WEATHER_FILE);
+  }
   fs.readdirSync('.')
     .filter(f => /^raw_.*[.]json$/.test(f))
     .forEach(f => fs.unlinkSync(f));
