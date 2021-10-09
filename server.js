@@ -19,8 +19,10 @@ app.use((_req, res, next) => {
   next();
 });
 
+const INIT_FILE = JSON.stringify(new Array(24).fill(null));
+
 function createFile(file) {
-  fs.writeFile(file, '[]', err => {
+  fs.writeFile(file, INIT_FILE, err => {
     if (err) console.error(err);
     console.log('created: ' + file);
   });
@@ -71,7 +73,7 @@ app.get('/raw', (req, res) => {
 
 app.post('/modify-weather', (req, res) => {
   const cred = req.headers.credential;
-  const data = req.body.data ?? '[]';
+  const data = req.body.data ?? INIT_FILE;
   if (CREDENTIAL === cred) {
     fs.writeFile(WEATHER_FILE, data, err => {
       if (err) {
@@ -92,7 +94,7 @@ app.post('/modify-raw', (req, res) => {
   }
 
   const cred = req.headers.credential;
-  const data = req.body.data ?? '[]';
+  const data = req.body.data ?? INIT_FILE;
   const rawFile = RAW_FILE(req.body.id);
   if (CREDENTIAL === cred) {
     fs.writeFile(rawFile, data, err => {
