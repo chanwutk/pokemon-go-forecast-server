@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 
 const CREDENTIAL = process.env.CREDENTIAL;
 const WEATHER_FILE = './weather.json';
-const RAW_FILE = './raw.json';
+const RAW_FILE = id => `./raw_${id}.json`;
 
 // server
 const app = express();
@@ -22,19 +22,25 @@ app.use((_req, res, next) => {
 });
 
 function createFile(file) {
-  fs.appendFile(file, '', (err) => {
+  fs.writeFile(file, '[]', err => {
     if (err) console.error(err);
-    fs.writeFile(file, '', err => {
-      if (err) console.error(err);
-      console.log('created: ' + file);
-    });
+    console.log('created: ' + file);
   });
 }
 
-createFile(WEATHER_FILE);
-createFile(RAW_FILE);
+function clearFiles() {
+  fs.unlinkSync(WEATHER_FILE);
+  fs.readdirSync('.')
+    .filter(f => /^raw_.*[.]json$/.test(f))
+    .forEach(f => fs.unlinkSync(f));
+}
+
+clearFiles();
 
 app.get('/', (_req, res) => {
+  if (!fs.existsSync(WEATHER_FILE)) {
+    createFile(WEATHER_FILE);
+  }
   fs.readFile(WEATHER_FILE, (err, data) => {
     if (err) {
       res.status(500).send(err);
@@ -44,8 +50,12 @@ app.get('/', (_req, res) => {
   });
 });
 
-app.get('/raw', (_req, res) => {
-  fs.readFile(RAW_FILE, (err, data) => {
+app.get('/raw', (req, res) => {
+  const rawFile = RAW_FILE(req.params.id);
+  if (!fs.existsSync(rawFile)) {
+    createFile(rawFile);
+  }
+  fs.readFile(rawFile, (err, data) => {
     if (err) {
       res.status(500).send(err);
     } else {
@@ -71,10 +81,16 @@ app.post('/modify-weather', (req, res) => {
 });
 
 app.post('/modify-raw', (req, res) => {
+  if (req.body.id === undefined) {
+    res.status(400).send('must provide id');
+    return;
+  }
+
   const cred = req.headers.credential;
   const data = req.body.data ?? '{}';
+  const rawFile = RAW_FILE(req.body.id);
   if (CREDENTIAL === cred) {
-    fs.writeFile(RAW_FILE, data, err => {
+    fs.writeFile(rawFile, data, err => {
       if (err) {
         res.status(500).send(err);
       } else {
@@ -89,8 +105,7 @@ app.post('/modify-raw', (req, res) => {
 app.post('/clear-records', (req, res) => {
   const cred = req.body.cred;
   if (CREDENTIAL === cred) {
-    createFile(WEATHER_FILE);
-    createFile(RAW_FILE);
+    clearFiles();
     res.status(200).send('records cleared');
   } else {
     res.status(400).send('incorrect credential');
