@@ -1,5 +1,6 @@
 const express = require('express');
 const fs = require('fs');
+const bodyParser = require('body-parser');
 
 const CREDENTIAL = process.env.CREDENTIAL;
 const WEATHER_FILE = './weather.json';
@@ -7,9 +8,11 @@ const RAW_FILE = './raw.json';
 
 // server
 const app = express();
-const port = process.env.PORT;
+const port = process.env.PORT ?? 8000;
 
-app.use((req, res, next) => {
+// app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use((_req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header(
     'Access-Control-Allow-Headers',
@@ -52,13 +55,14 @@ app.get('/raw', (_req, res) => {
 });
 
 app.post('/modify-weather', (req, res) => {
-  const cred = req.body.cred;
+  const cred = req.headers.credential;
+  const data = req.body.data ?? '{}';
   if (CREDENTIAL === cred) {
-    fs.writeFile(WEATHER_FILE, req.body.data, err => {
+    fs.writeFile(WEATHER_FILE, data, err => {
       if (err) {
         res.status(500).send(err);
       } else {
-        res.status(200).send('records cleared');
+        res.status(200).send('weather modified');
       }
     });
   } else {
@@ -67,13 +71,14 @@ app.post('/modify-weather', (req, res) => {
 });
 
 app.post('/modify-raw', (req, res) => {
-  const cred = req.body.cred;
+  const cred = req.headers.credential;
+  const data = req.body.data ?? '{}';
   if (CREDENTIAL === cred) {
-    fs.writeFile(RAW_FILE, res.body.data, err => {
+    fs.writeFile(RAW_FILE, data, err => {
       if (err) {
         res.status(500).send(err);
       } else {
-        res.status(200).send('records cleared');
+        res.status(200).send('raw weather modified');
       }
     });
   } else {
