@@ -56,7 +56,7 @@ app.get('/raw', (_req, res) => {
 
 app.post('/modify-weather', (req, res) => {
   const cred = req.headers.credential;
-  const data = req.body.data ?? '{}';
+  const data = req.body.data ?? '[]';
   if (CREDENTIAL === cred) {
     fs.writeFile(WEATHER_FILE, data, err => {
       if (err) {
@@ -72,7 +72,7 @@ app.post('/modify-weather', (req, res) => {
 
 app.post('/modify-raw', (req, res) => {
   const cred = req.headers.credential;
-  const data = req.body.data ?? '{}';
+  const data = req.body.data ?? '[]';
   if (CREDENTIAL === cred) {
     fs.writeFile(RAW_FILE, data, err => {
       if (err) {
