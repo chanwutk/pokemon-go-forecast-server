@@ -7,7 +7,7 @@ const RAW_FILE = './raw.json';
 
 // server
 const app = express();
-const port = 8000;
+const port = process.env.PORT;
 
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
