@@ -92,7 +92,7 @@ app.get('/raw', (req, res) => {
 
   const rawFile = RAW_NAME(req.query.id);
   pool
-    .query("SELECT * FROM files WHERE name = '$1'", [rawFile])
+    .query("SELECT * FROM files WHERE name = $1", [rawFile])
     .then(result => {
       if (result.rowCount === 0) {
         res.status(200).send(INIT_FILE);
@@ -149,7 +149,7 @@ app.post('/modify-raw', (req, res) => {
       .query("DELETE FROM files WHERE name = '$1'", [rawFile])
       .then(() => {
         pool
-          .query("INSERT INTO files (name, content) VALUES ('$1', '$2')", [rawFile, data])
+          .query("INSERT INTO files (name, content) VALUES ($1, $2)", [rawFile, data])
           .then(() => {
             res.status(200).send('raw modified');
           })
