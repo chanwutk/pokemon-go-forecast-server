@@ -114,8 +114,9 @@ app.post('/modify-weather', (req, res) => {
     pool
       .query("DELETE FROM files WHERE name = 'weather'")
       .then(() => {
+        console.log('deleted weather');
         pool
-          .query("INSERT INTO files (name, content) VALUES ('weather', '$1')", [data])
+          .query("INSERT INTO files (name, content) VALUES ('weather', $1)", [data])
           .then(() => {
             console.log('weather modified');
             res.status(200).send('weather modified');
