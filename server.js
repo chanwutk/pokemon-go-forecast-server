@@ -146,7 +146,7 @@ app.post('/modify-raw', (req, res) => {
   const rawFile = RAW_NAME(req.body.id);
   if (CREDENTIAL === cred) {
     pool
-      .query("DELETE FROM files WHERE name = '$1'", [rawFile])
+      .query("DELETE FROM files WHERE name = $1", [rawFile])
       .then(() => {
         pool
           .query("INSERT INTO files (name, content) VALUES ($1, $2)", [rawFile, data])
