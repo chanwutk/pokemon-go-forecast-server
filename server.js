@@ -67,12 +67,13 @@ function clearFiles() {
 
 app.get('/weather', (_req, res) => {
   pool
-    .query("SELECT * FROM files WHERE name = 'weather'")
+    .query("SELECT * FROM files WHERE name = 'weather';")
     .then(result => {
-      console.log(result);
       if (result.rowCount === 0) {
+        console.log('no weather found');
         res.status(200).send('[]');
       } else if (result.rowCount === 1) {
+        console.log('found weather');
         res.status(200).send(result.rows[0]['content']);
       } else {
         res.status(500).send('database contains multiple weather');
@@ -91,7 +92,7 @@ app.get('/raw', (req, res) => {
 
   const rawFile = RAW_NAME(req.query.id);
   pool
-    .query('SELECT * FROM files WHERE name = "$1', [rawFile])
+    .query("SELECT * FROM files WHERE name = '$1'", [rawFile])
     .then(result => {
       if (result.rowCount === 0) {
         res.status(200).send(INIT_FILE);
@@ -111,10 +112,10 @@ app.post('/modify-weather', (req, res) => {
   const data = req.body.data ?? '[]';
   if (CREDENTIAL === cred) {
     pool
-      .query('DELETE FROM files WHERE name = "weather"')
+      .query("DELETE FROM files WHERE name = 'weather'")
       .then(() => {
         pool
-          .query('INSERT INTO files (name, content) VALUES ("weather", "$1")', [data])
+          .query("INSERT INTO files (name, content) VALUES ('weather', '$1')", [data])
           .then(() => {
             res.status(200).send('weather modified');
           })
@@ -141,10 +142,10 @@ app.post('/modify-raw', (req, res) => {
   const rawFile = RAW_NAME(req.body.id);
   if (CREDENTIAL === cred) {
     pool
-      .query('DELETE FROM files WHERE name = "$1"', [rawFile])
+      .query("DELETE FROM files WHERE name = '$1'", [rawFile])
       .then(() => {
         pool
-          .query('INSERT INTO files (name, content) VALUES ("$1", "$2")', [rawFile, data])
+          .query("INSERT INTO files (name, content) VALUES ('$1', '$2')", [rawFile, data])
           .then(() => {
             res.status(200).send('raw modified');
           })
