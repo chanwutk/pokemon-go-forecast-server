@@ -30,7 +30,7 @@ if (others3.length) {
   throw new Error('database info should be splitted to 2 parts but found extra: ' + others3.join(', '));
 }
 
-const [host, db_port, ...other4] = host_url.split(':');
+const [host, db_port, ...others4] = host_url.split(':');
 if (others4.length) {
   throw new Error('host url should be splitted to 2 parts but found extra: ' + others4.join(', '));
 }
@@ -40,7 +40,7 @@ const pool = new Pool({
   user,
   password,
   database,
-  host,
+  host: host + '?sslmode=require',
   port: db_port
 });
 
