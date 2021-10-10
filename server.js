@@ -37,7 +37,6 @@ const port = process.env.PORT ?? 8000;
 // database
 const pool = new Pool({
   connectionString: DB_URL,
-  ssl: true,
   sslmode: 'require'
 });
 
