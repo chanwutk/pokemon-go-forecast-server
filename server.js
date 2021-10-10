@@ -21,8 +21,8 @@ app.use((_req, res, next) => {
 
 const INIT_FILE = JSON.stringify(new Array(24).fill(null));
 
-function createFile(file) {
-  fs.writeFile(file, INIT_FILE, err => {
+function createFile(file, initFile=INIT_FILE) {
+  fs.writeFile(file, initFile, err => {
     if (err) console.error(err);
     console.log('created: ' + file);
   });
@@ -39,7 +39,7 @@ function clearFiles() {
 
 app.get('/weather', (_req, res) => {
   if (!fs.existsSync(WEATHER_FILE)) {
-    createFile(WEATHER_FILE);
+    createFile(WEATHER_FILE, '[]');
   }
   fs.readFile(WEATHER_FILE, (err, data) => {
     if (err) {
