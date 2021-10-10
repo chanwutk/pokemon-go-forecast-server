@@ -37,8 +37,6 @@ function clearFiles() {
     .forEach(f => fs.unlinkSync(f));
 }
 
-clearFiles();
-
 app.get('/weather', (_req, res) => {
   if (!fs.existsSync(WEATHER_FILE)) {
     createFile(WEATHER_FILE);
