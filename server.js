@@ -118,7 +118,7 @@ app.post('/modify-weather', (req, res) => {
         pool
           .query("INSERT INTO files (name, content) VALUES ('weather', $1)", [data])
           .then(() => {
-            console.log('weather modified');
+            console.log('weather modified: ', data);
             res.status(200).send('weather modified');
           })
           .catch(error => {
