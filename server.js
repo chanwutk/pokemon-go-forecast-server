@@ -1,13 +1,48 @@
 const express = require('express');
+const {Pool} = require('pg');
 const fs = require('fs');
 
 const CREDENTIAL = process.env.CREDENTIAL;
-const WEATHER_FILE = './weather.json';
-const RAW_FILE = id => `./raw_${id}.json`;
+const DB_URL = process.env.DATABASE_URL;
+const RAW_NAME = id => `raw_${id}`;
 
 // server
 const app = express();
 const port = process.env.PORT ?? 8000;
+
+const [user_info, database_info, ...others1] = DB_URL.split('@');
+if (others1.length) {
+  throw new Error('url should be splitted to 2 parts but found extra: ' + others1.join(', '));
+}
+
+if (!user_info.startsWith('postgres://')) {
+  throw new Error('url should starts with postgres://');
+}
+
+const [user, password, ...others2] = user_info.substring('postgres://'.length).split(':');
+if (others2.length) {
+  throw new Error('user info should be splitted to 2 parts but found extra: ' + others2.join(', '));
+}
+
+
+const [host_url, database, ...others3] = database_info.split('/');
+if (others3.length) {
+  throw new Error('database info should be splitted to 2 parts but found extra: ' + others3.join(', '));
+}
+
+const [host, db_port, ...other4] = host_url.split(':');
+if (others4.length) {
+  throw new Error('host url should be splitted to 2 parts but found extra: ' + others4.join(', '));
+}
+
+// database
+const pool = new Pool({
+  user,
+  password,
+  database,
+  host,
+  port: db_port
+});
 
 app.use(express.json());
 app.use((_req, res, next) => {
@@ -21,33 +56,34 @@ app.use((_req, res, next) => {
 
 const INIT_FILE = JSON.stringify(new Array(24).fill(null));
 
-function createFile(file, initFile=INIT_FILE) {
-  fs.writeFile(file, initFile, err => {
-    if (err) console.error(err);
-    console.log('created: ' + file);
-  });
-}
-
 function clearFiles() {
-  if (fs.existsSync(WEATHER_FILE)) {
-    fs.unlinkSync(WEATHER_FILE);
-  }
-  fs.readdirSync('.')
-    .filter(f => /^raw_.*[.]json$/.test(f))
-    .forEach(f => fs.unlinkSync(f));
+  pool
+    .query('DROP TABLE IF EXISTS files')
+    .then(() => {
+      console.log('table dropped: files');
+      pool
+        .query('CREATE TABLE files (name VARCHAR(20) PRIMARY KEY, content TEXT)')
+        .then(() => {
+          console.log('created table: files');
+        });
+    });
 }
 
 app.get('/weather', (_req, res) => {
-  if (!fs.existsSync(WEATHER_FILE)) {
-    createFile(WEATHER_FILE, '[]');
-  }
-  fs.readFile(WEATHER_FILE, (err, data) => {
-    if (err) {
-      res.status(500).send(err);
-    } else {
-      res.status(200).send(data.toString());
-    }
-  });
+  pool
+    .query('SELECT * FROM files WHERE name = "weather"')
+    .then(result => {
+      if (result.rowCount === 0) {
+        res.status(200).send('[]');
+      } else if (result.rowCount === 1) {
+        res.status(200).send(result.rows[0]['content']);
+      } else {
+        res.status(500).send('database contains multiple weather');
+      }
+    })
+    .catch(error => {
+      res.status(500).send('query error: ' + error);
+    })
 });
 
 app.get('/raw', (req, res) => {
@@ -56,30 +92,42 @@ app.get('/raw', (req, res) => {
     return;
   }
 
-  const rawFile = RAW_FILE(req.query.id);
-  if (!fs.existsSync(rawFile)) {
-    createFile(rawFile);
-  }
-  fs.readFile(rawFile, (err, data) => {
-    if (err) {
-      res.status(500).send(err);
-    } else {
-      res.status(200).send(data.toString());
-    }
-  });
+  const rawFile = RAW_NAME(req.query.id);
+  pool
+    .query('SELECT * FROM files WHERE name = "$1', [rawFile])
+    .then(result => {
+      if (result.rowCount === 0) {
+        res.status(200).send(INIT_FILE);
+      } else if (result.rowCount === 1) {
+        res.status(200).send(result.rows[0]['content']);
+      } else {
+        res.status(500).send('database contains multiple weather');
+      }
+    })
+    .catch(error => {
+      res.status(500).send('query error: ' + error);
+    })
 });
 
 app.post('/modify-weather', (req, res) => {
   const cred = req.headers.credential;
-  const data = req.body.data ?? INIT_FILE;
+  const data = req.body.data ?? '[]';
   if (CREDENTIAL === cred) {
-    fs.writeFile(WEATHER_FILE, data, err => {
-      if (err) {
-        res.status(500).send(err);
-      } else {
-        res.status(200).send('weather modified');
-      }
-    });
+    pool
+      .query('DELETE FROM files WHERE name = "weather"')
+      .then(() => {
+        pool
+          .query('INSERT INTO files (name, content) VALUES ("weather", "$1")', [data])
+          .then(() => {
+            res.status(200).send('weather modified');
+          })
+          .catch(error => {
+            res.status(500).send(error);
+          })
+      })
+      .catch(error => {
+        res.status(500).send(error);
+      })
   } else {
     res.status(400).send('incorrect credential');
   }
@@ -93,15 +141,23 @@ app.post('/modify-raw', (req, res) => {
 
   const cred = req.headers.credential;
   const data = req.body.data ?? INIT_FILE;
-  const rawFile = RAW_FILE(req.body.id);
+  const rawFile = RAW_NAME(req.body.id);
   if (CREDENTIAL === cred) {
-    fs.writeFile(rawFile, data, err => {
-      if (err) {
-        res.status(500).send(err);
-      } else {
-        res.status(200).send('raw weather modified');
-      }
-    });
+    pool
+      .query('DELETE FROM files WHERE name = "$1"', [rawFile])
+      .then(() => {
+        pool
+          .query('INSERT INTO files (name, content) VALUES ("$1", "$2")', [rawFile, data])
+          .then(() => {
+            res.status(200).send('raw modified');
+          })
+          .catch(error => {
+            res.status(500).send(error);
+          })
+      })
+      .catch(error => {
+        res.status(500).send(error);
+      })
   } else {
     res.status(400).send('incorrect credential');
   }
