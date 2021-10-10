@@ -67,7 +67,7 @@ function clearFiles() {
 
 app.get('/weather', (_req, res) => {
   pool
-    .query('SELECT * FROM files WHERE name = "weather"')
+    .query("SELECT * FROM files WHERE name = 'weather'")
     .then(result => {
       console.log(result);
       if (result.rowCount === 0) {
