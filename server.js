@@ -69,6 +69,7 @@ app.get('/weather', (_req, res) => {
   pool
     .query('SELECT * FROM files WHERE name = "weather"')
     .then(result => {
+      console.log(result);
       if (result.rowCount === 0) {
         res.status(200).send('[]');
       } else if (result.rowCount === 1) {
