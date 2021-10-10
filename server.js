@@ -3,36 +3,12 @@ const {Pool} = require('pg');
 
 const CREDENTIAL = process.env.CREDENTIAL;
 const DB_URL = process.env.DATABASE_URL;
+const port = process.env.PORT ?? 8000;
+
 const RAW_NAME = id => `raw_${id}`;
 
 // server
 const app = express();
-const port = process.env.PORT ?? 8000;
-
-// const [user_info, database_info, ...others1] = DB_URL.split('@');
-// if (others1.length) {
-//   throw new Error('url should be splitted to 2 parts but found extra: ' + others1.join(', '));
-// }
-
-// if (!user_info.startsWith('postgres://')) {
-//   throw new Error('url should starts with postgres://');
-// }
-
-// const [user, password, ...others2] = user_info.substring('postgres://'.length).split(':');
-// if (others2.length) {
-//   throw new Error('user info should be splitted to 2 parts but found extra: ' + others2.join(', '));
-// }
-
-
-// const [host_url, database, ...others3] = database_info.split('/');
-// if (others3.length) {
-//   throw new Error('database info should be splitted to 2 parts but found extra: ' + others3.join(', '));
-// }
-
-// const [host, db_port, ...others4] = host_url.split(':');
-// if (others4.length) {
-//   throw new Error('host url should be splitted to 2 parts but found extra: ' + others4.join(', '));
-// }
 
 // database
 const pool = new Pool({
@@ -58,7 +34,7 @@ function clearFiles() {
     .then(() => {
       console.log('table dropped: files');
       pool
-        .query('CREATE TABLE files (name VARCHAR(20) PRIMARY KEY, content TEXT)')
+        .query('CREATE TABLE files (name VARCHAR(20) PRIMARY KEY, data TEXT)')
         .then(() => {
           console.log('created table: files');
         });
@@ -74,7 +50,7 @@ app.get('/weather', (_req, res) => {
         res.status(200).send('[]');
       } else if (result.rowCount === 1) {
         console.log('found weather');
-        res.status(200).send(result.rows[0]['content']);
+        res.status(200).send(result.rows[0]['data']);
       } else {
         res.status(500).send('database contains multiple weather');
       }
@@ -97,7 +73,7 @@ app.get('/raw', (req, res) => {
       if (result.rowCount === 0) {
         res.status(200).send(INIT_FILE);
       } else if (result.rowCount === 1) {
-        res.status(200).send(result.rows[0]['content']);
+        res.status(200).send(result.rows[0]['data']);
       } else {
         res.status(500).send('database contains multiple weather');
       }
@@ -114,22 +90,12 @@ app.post('/modify-weather', (req, res) => {
     pool
       .query("DELETE FROM files WHERE name = 'weather'")
       .then(() => {
-        console.log('deleted weather');
         pool
-          .query("INSERT INTO files (name, content) VALUES ('weather', $1)", [data])
-          .then(() => {
-            console.log('weather modified: ', data);
-            res.status(200).send('weather modified');
-          })
-          .catch(error => {
-            console.log('weather insert fail');
-            res.status(500).send(error);
-          })
+          .query("INSERT INTO files (name, data) VALUES ('weather', $1)", [data])
+          .then(() => res.status(200).send('weather modified'))
+          .catch(error => res.status(500).send('insert fail: ' + error))
       })
-      .catch(error => {
-        console.log('weather delete fail');
-        res.status(500).send(error);
-      })
+      .catch(error => res.status(500).send('delete fail: ' + error))
   } else {
     res.status(400).send('incorrect credential');
   }
@@ -149,17 +115,11 @@ app.post('/modify-raw', (req, res) => {
       .query("DELETE FROM files WHERE name = $1", [rawFile])
       .then(() => {
         pool
-          .query("INSERT INTO files (name, content) VALUES ($1, $2)", [rawFile, data])
-          .then(() => {
-            res.status(200).send('raw modified');
-          })
-          .catch(error => {
-            res.status(500).send(error);
-          })
+          .query("INSERT INTO files (name, data) VALUES ($1, $2)", [rawFile, data])
+          .then(() => res.status(200).send('raw modified'))
+          .catch(error => res.status(500).send('insert fail: ' + error))
       })
-      .catch(error => {
-        res.status(500).send(error);
-      })
+      .catch(error => res.status(500).send('delete fail: ' + error))
   } else {
     res.status(400).send('incorrect credential');
   }
