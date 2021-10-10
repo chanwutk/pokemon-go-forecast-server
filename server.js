@@ -37,7 +37,7 @@ const port = process.env.PORT ?? 8000;
 // database
 const pool = new Pool({
   connectionString: DB_URL,
-  sslmode: 'require'
+  ssl: { rejectUnauthorized: false }
 });
 
 app.use(express.json());
