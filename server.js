@@ -10,38 +10,35 @@ const RAW_NAME = id => `raw_${id}`;
 const app = express();
 const port = process.env.PORT ?? 8000;
 
-const [user_info, database_info, ...others1] = DB_URL.split('@');
-if (others1.length) {
-  throw new Error('url should be splitted to 2 parts but found extra: ' + others1.join(', '));
-}
+// const [user_info, database_info, ...others1] = DB_URL.split('@');
+// if (others1.length) {
+//   throw new Error('url should be splitted to 2 parts but found extra: ' + others1.join(', '));
+// }
 
-if (!user_info.startsWith('postgres://')) {
-  throw new Error('url should starts with postgres://');
-}
+// if (!user_info.startsWith('postgres://')) {
+//   throw new Error('url should starts with postgres://');
+// }
 
-const [user, password, ...others2] = user_info.substring('postgres://'.length).split(':');
-if (others2.length) {
-  throw new Error('user info should be splitted to 2 parts but found extra: ' + others2.join(', '));
-}
+// const [user, password, ...others2] = user_info.substring('postgres://'.length).split(':');
+// if (others2.length) {
+//   throw new Error('user info should be splitted to 2 parts but found extra: ' + others2.join(', '));
+// }
 
 
-const [host_url, database, ...others3] = database_info.split('/');
-if (others3.length) {
-  throw new Error('database info should be splitted to 2 parts but found extra: ' + others3.join(', '));
-}
+// const [host_url, database, ...others3] = database_info.split('/');
+// if (others3.length) {
+//   throw new Error('database info should be splitted to 2 parts but found extra: ' + others3.join(', '));
+// }
 
-const [host, db_port, ...others4] = host_url.split(':');
-if (others4.length) {
-  throw new Error('host url should be splitted to 2 parts but found extra: ' + others4.join(', '));
-}
+// const [host, db_port, ...others4] = host_url.split(':');
+// if (others4.length) {
+//   throw new Error('host url should be splitted to 2 parts but found extra: ' + others4.join(', '));
+// }
 
 // database
 const pool = new Pool({
-  user,
-  password,
-  database,
-  host: host + '?sslmode=require',
-  port: db_port
+  connectionString: DB_URL,
+  ssl: 'require'
 });
 
 app.use(express.json());
