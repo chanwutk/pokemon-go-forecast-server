@@ -1,6 +1,5 @@
 const express = require('express');
 const {Pool} = require('pg');
-const fs = require('fs');
 
 const CREDENTIAL = process.env.CREDENTIAL;
 const DB_URL = process.env.DATABASE_URL;
@@ -38,7 +37,8 @@ const port = process.env.PORT ?? 8000;
 // database
 const pool = new Pool({
   connectionString: DB_URL,
-  ssl: 'require'
+  ssl: true,
+  sslmode: 'require'
 });
 
 app.use(express.json());
