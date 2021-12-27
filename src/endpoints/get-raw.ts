@@ -1,8 +1,7 @@
 import {Express} from 'express';
-import {Pool} from 'pg';
-import {INIT_FILE, RAW_NAME} from '../globals';
+import {INIT_FILE, pool, RAW_NAME} from '../globals';
 
-export default function(app: Express, pool: Pool) {
+export default function(app: Express) {
   app.get('/raw', (req, res) => {
     if (typeof req.query.id !== 'string') {
       res.status(400).send('must provide id');

@@ -1,7 +1,7 @@
 import {Express} from 'express';
-import {Pool} from 'pg';
+import {pool} from '../globals';
 
-export default function(app: Express, pool: Pool) {
+export default function(app: Express) {
   app.get('/weather', (_req, res) => {
     pool
       .query("SELECT * FROM files WHERE name = 'weather';")

@@ -1,8 +1,7 @@
 import {Express} from 'express';
-import {Pool} from 'pg';
-import {CREDENTIAL, INIT_FILE, RAW_NAME} from '../globals';
+import {CREDENTIAL, INIT_FILE, pool, RAW_NAME} from '../globals';
 
-export default function(app: Express, pool: Pool) {
+export default function(app: Express) {
   app.post('/modify-raw', (req, res) => {
     if (req.body.id === undefined) {
       res.status(400).send('must provide id');

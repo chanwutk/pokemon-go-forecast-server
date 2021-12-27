@@ -1,8 +1,7 @@
 import {Express} from 'express';
-import {Pool} from 'pg';
-import {CREDENTIAL} from '../globals';
+import {CREDENTIAL, pool} from '../globals';
 
-export default function(app: Express, pool: Pool) {
+export default function(app: Express) {
   app.post('/modify-weather', (req, res) => {
     const cred = req.headers.credential;
     const data = req.body.data ?? '[]';
