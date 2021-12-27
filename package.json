@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "prettierbase": "prettier --write src/{,**/,**/**/}*.ts",
-    "start": "node dist/server.js",
+    "start": "npm run build && node dist/server.js",
     "build": "del-cli --force dist && tsc --project ."
   },
   "dependencies": {
