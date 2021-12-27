@@ -7,7 +7,7 @@
     "tsc": "./node_modules/typescript/bin/tsc",
     "prettierbase": "prettier --write src/{,**/,**/**/}*.ts",
     "start": "npm run build && node dist/server.js",
-    "build": "rm -rf dist && tsc --project ."
+    "build": "rm -rf dist && npm run tsc --project ."
   },
   "devDependencies": {
     "@types/express": "^4.17.13",
