@@ -1,4 +1,4 @@
 node_modules
 raw_*.json
 weather.json
-dist/*
+dist/
