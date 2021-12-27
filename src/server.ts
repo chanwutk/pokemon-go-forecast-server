@@ -1,11 +1,11 @@
-const express = require('express');
-const {Pool} = require('pg');
+import express from 'express';
+import {Pool} from 'pg';
 
 const CREDENTIAL = process.env.CREDENTIAL;
 const DB_URL = process.env.DATABASE_URL;
 const port = process.env.PORT ?? 8000;
 
-const RAW_NAME = id => `raw_${id}`;
+const RAW_NAME = (id: string) => `raw_${id}`;
 
 // server
 const app = express();
@@ -61,7 +61,7 @@ app.get('/weather', (_req, res) => {
 });
 
 app.get('/raw', (req, res) => {
-  if (req.query.id === undefined) {
+  if (typeof req.query.id !== 'string') {
     res.status(400).send('must provide id');
     return;
   }
